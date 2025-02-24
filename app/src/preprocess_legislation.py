@@ -31,7 +31,7 @@ def extract_articles(content):
 
     # Itera nos pares (Título, Texto)
     for i in range(1, len(sections) - 1, 2):
-        title = sections[i].strip().replace(".", "").replace("º", "").replace("°", "")  # Remove pontuação desnecessária
+        title = sections[i].strip().replace(".", "").replace("º", "").replace("°", "").replace("\n", "")   # Remove pontuação desnecessária
         text = sections[i + 1].strip().lstrip('.').lstrip()  # Texto do artigo
 
         # Verifica se é um capítulo
