@@ -56,7 +56,8 @@ def extract_articles(content):
     
             # Se houver parágrafos, organizar a estrutura
             if len(paragraphs) > 1:
-                section_dict["text"] = paragraphs[0].strip().lstrip('.').lstrip()  # Texto antes do primeiro parágrafo
+                clean_text = paragraphs[0].strip().lstrip('.').lstrip()  # Texto antes do primeiro parágrafo
+                section_dict["text"] = re.sub(r"\s+", " ", clean_text)
                 
                 for j in range(1, len(paragraphs) - 1, 2):
                     para_key = paragraphs[j].strip().replace("§", "p").replace("º", "").replace("°", "").replace(" ", "")
@@ -71,7 +72,7 @@ def extract_articles(content):
                     inciso_dict = {}
     
                     if len(incisos) > 1:
-                        section_dict[para_key] = {"text": incisos[0].strip()}  # Texto antes do primeiro inciso
+                        section_dict[para_key] = {"text": re.sub(r"\s+", " ", incisos[0].strip())}  # Texto antes do primeiro inciso
     
                         for k in range(1, len(incisos) - 1, 2):
                             inciso_key = f"{incisos[k].strip().lstrip('.').lstrip().replace('.', '')}"
