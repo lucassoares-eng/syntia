@@ -9,6 +9,8 @@ LEGISLATION_MAP_PATH = "app/data/legislation_map.json"
 PATTERNS = [
     r'RDC\s*n[ºo]?\s*\d{1,4}/\d{4}',  # Exemplo: RDC nº 250/2005
     r'RDC\s*n[ºo]?\s*\d{1,4},\s*de\s*\d{1,2}\s*de\s*\w+\s*de\s*\d{4}',  # RDC nº 315, de 26 de outubro de 2005
+    r'RDC\s*n[ºo]?\s*\d{1,4},\s*de\s*\d{1,2}\s*de\s*\w+,\s*de\s*\d{4}',  # RDC nº 315, de 26 de outubro, de 2005
+    r'RE\s*n[ºo]?\s*\d{1,4},\s*de\s*\d{1,2}\s*de\s*\w+,\s*de\s*\d{4}',  # RE nº 899, de 29 de maio, de 2003
     r'Lei\s*n[ºo]?\s*\d{1,4},\s*de\s*\d{1,2}\s*de\s*\w+\s*de\s*\d{4}',  # Lei nº 6.437, de 20 de agosto de 1977
     r'Lei\s*n[ºo.]?\s*\d{1,4}/\d{4}',  # Lei nº 12.345/2010
     r'IN\s*n[ºo.]?\s*\d{1,4}/\d{4}',  # IN nº 3/2013
@@ -16,21 +18,21 @@ PATTERNS = [
     r'Instrução\s*Normativa\s*n[ºo.]?\s*\d{1,4}/\d{4}',  # Instrução Normativa nº 3/2013
     r'Portaria\s*n[ºo.]?\s*\d{1,4}/\d{4}',  # Portaria nº 100/2018
     r'Portaria\s*n[ºo.]?\s*\d{1,4}/MS',  # Portaria nº 696/MS
-    r'Nota\s*Técnica\s*(Conjunta\s*)?\d{1,4}/\d{4}.*?,\s*de\s*\d{1,2}\s*de\s*\w+\s*de\s*\d{4}',  # Nota Técnica Conjunta 01/2016, de 22 de abril de 2016
+    r'Nota\s*Técnica\s*Conjunta\s*?\d{1,4}/\d{4}.*?,\s*de\s*\d{1,2}\s*de\s*\w+\s*de\s*\d{4}',  # Nota Técnica Conjunta 01/2016, de 22 de abril de 2016
     r'Nota\s*Técnica\s*n[ºo.]?\s*\d{1,4}-\d{1,4}/\d{4}',  # Nota Técnica nº 06-001/2015
     r'RDC\s*n[°]?\s*\d{1,4}/\d{4}'  # Exemplo: RDC n° 55/2005
 ]
 
 REVOKE_TERMS = ["revoga", "revogado", "revogada", "revogação", "fica sem efeito", "passa a vigorar", "substitui", "revogam-se"]
 COMPLEMENT_TERMS = ["complementa", "alterada por", "modifica", "acrescido", "acrescenta", "fica incluído", "ficam incluídos"]
-CITES_TERMS = ["conforme", "de acordo com", "nos termos", "descrita nas seções", "considerando", "não substitui"]
+CITES_TERMS = ["conforme", "de acordo com", "nos termos", "descrita nas seções", "considerando", "não substitui", "n�o substitui"]
 
 def extract_legislation_references(text):
     """Extrai citações de outras legislações do texto."""
     for pattern in PATTERNS:
         matches = re.findall(pattern, text, re.IGNORECASE)
         if matches:
-            return matches[0]
+            return matches
 
 def check_relation(text, terms):
     """Verifica se há menção a termos de revogação ou complementação."""
