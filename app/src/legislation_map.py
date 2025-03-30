@@ -100,5 +100,3 @@ def analyze_legislation_references():
         json.dump(legislation_map, f, indent=4, ensure_ascii=False)
     
     print("[✔] Mapeamento de legislações concluído e salvo.")
-
-analyze_legislation_references()

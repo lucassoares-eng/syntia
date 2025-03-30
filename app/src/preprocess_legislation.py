@@ -1,9 +1,52 @@
 import os
 import re
 import json
+from datetime import datetime
 
 # Caminho da pasta contendo os textos
 TEXTS_DIR = "app/data/texts"
+
+def extract_publication_date(content):
+    """Extrai a data de publicação do texto"""
+    # Primeiro normalizamos caracteres especiais
+    content = content.replace('�', 'ã').replace('�', 'ç')
+    
+    # Padrões para datas no texto
+    date_patterns = [
+        r"(?:DE|,)\s*(\d{1,2})\s*DE\s*([A-ZÇÃÊÓÍÉÂÔ]+)\s*DE\s*(\d{4})",  # 28 DE JUNHO DE 2013
+        r"(?:DE|,)\s*(\d{1,2})[/](\d{1,2})[/](\d{4})",  # 17/11/2009
+        r"(?:DE|,)\s*(\d{1,2})\s*[DE\s]*([A-ZÇÃÊÓÍÉÂÔ]+)\s*[DE\s]*(\d{4})",  # 7 de maio de 2001
+        r"(?:DE|,)\s*(\d{1,2})\s*[/]\s*(\d{1,2})\s*[/]\s*(\d{4})",  # 10/02/2009
+        r"(?:DE|,)\s*(\d{1,2})\s*,\s*de\s*([a-zçãêóíéâô]+)\s*de\s*(\d{4})", #22, de abril de 2016
+        r"(?:DE|,)\s*(\d{1,2})\s*,\s*DE\s*([A-ZÇÃÊÓÍÉÂÔ]+)\s*DE\s*(\d{4})", #22, DE ABRIL DE 2016
+        r"(?:Portaria|Resolu[çc][ãa]o|Instru[çc][ãa]o Normativa)\s*(?:n[º°°]|N[º°]|n\.|N\.)\s*\d+\s*,\s*[Dd][Ee]\s*(\d{1,2})\s*[Dd][Ee]\s*([a-zçãêóíéâô]+)\s*[Dd][Ee]\s*(\d{4})",
+        r"NOTA TÉCNICA(?: CONJUNTA)?\s*\d+/\d+\s*[–-]\s*[A-Z/]+\s*(\d{1,2})\s*,\s*de\s*([a-zçãêóíéâô]+)\s*de\s*(\d{4})",
+        r"(\d{1,2})\s*,\s*de\s*([a-zçãêóíéâô]+)\s*de\s*(\d{4})"
+    ]
+    
+    month_map = {
+        'JANEIRO': '01', 'FEVEREIRO': '02', 'MARÇO': '03', 'MARCO': '03',
+        'ABRIL': '04', 'MAIO': '05', 'JUNHO': '06', 'JULHO': '07',
+        'AGOSTO': '08', 'SETEMBRO': '09', 'OUTUBRO': '10', 'NOVEMBRO': '11',
+        'DEZEMBRO': '12', 'JAN': '01', 'FEV': '02', 'MAR': '03',
+        'ABR': '04', 'MAI': '05', 'JUN': '06', 'JUL': '07',
+        'AGO': '08', 'SET': '09', 'OUT': '10', 'NOV': '11', 'DEZ': '12'
+    }
+    
+    for pattern in date_patterns:
+        match = re.search(pattern, content, re.IGNORECASE)
+        if match:
+            groups = match.groups()
+            if len(groups) == 3:  # Formato com mês por extenso
+                day, month, year = groups
+                month = month.upper()
+                month_num = month_map.get(month, '01')
+                return f"{month_num}/{day.zfill(2)}/{year}"
+            elif len(groups) == 3:  # Formato numérico (DD/MM/YYYY)
+                day, month, year = groups
+                return f"{month.zfill(2)}/{day.zfill(2)}/{year}"
+    
+    return None
 
 def clean_text(text):
     """Remove caracteres especiais e normaliza espaços"""
@@ -12,11 +55,18 @@ def clean_text(text):
     return text.strip()
 
 def extract_articles(content):
+    # Extrai a data de publicação primeiro
+    publication_date = extract_publication_date(content)
+    
     # Regex para capturar títulos dos artigos e anexos
     sections = re.split(r'(CAPÍTULO+[IVXLCDM]|CAPÍTULO\s+[IVXLCDM]+|Seção\s+[IVXLCDM]+|Art\.\s*\d{1,3}[º°]?|ANEXO\s+[IVXLCDM]+)', content)
 
     # Criando o dicionário estruturado
     articles_dict = {}
+
+    # Adiciona a data de publicação se encontrada
+    if publication_date:
+        articles_dict["date"] = publication_date
 
     # Processar o cabeçalho, excluindo tudo antes de "Dispõe sobre" ou "Assunto"
     header = sections[0].strip()
@@ -115,17 +165,18 @@ def process_legislation(file_path):
     legislation = extract_articles(content)
     return legislation
 
-# Processa todos os arquivos da pasta
-structured_legislations = {}
+def preprocess_legislation():
+    # Processa todos os arquivos da pasta
+    structured_legislations = {}
 
-for filename in os.listdir(TEXTS_DIR):
-    if filename.endswith(".txt") and not ('perguntas_e_respostas' in filename):
-        file_path = os.path.join(TEXTS_DIR, filename)
-        structured_legislations[filename] = process_legislation(file_path)
+    for filename in os.listdir(TEXTS_DIR):
+        if filename.endswith(".txt") and not ('perguntas_e_respostas' in filename):
+            file_path = os.path.join(TEXTS_DIR, filename)
+            structured_legislations[filename.split('.')[0]] = process_legislation(file_path)
 
-# Salva os dados estruturados em JSON
-output_path = "app/data/processed_legislation.json"
-with open(output_path, "w", encoding="utf-8") as json_file:
-    json.dump(structured_legislations, json_file, indent=4, ensure_ascii=False)
+    # Salva os dados estruturados em JSON
+    output_path = "app/data/processed_legislation.json"
+    with open(output_path, "w", encoding="utf-8") as json_file:
+        json.dump(structured_legislations, json_file, indent=4, ensure_ascii=False)
 
-print(f"Processamento concluído! Dados salvos em {output_path}")
+    print(f"Processamento concluído! Dados salvos em {output_path}")
