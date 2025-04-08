@@ -167,16 +167,19 @@ def process_legislation(file_path):
 
 def preprocess_legislation():
     # Processa todos os arquivos da pasta
-    structured_legislations = {}
+    os.makedirs("app/data/preprocess", exist_ok=True)  # Cria a pasta se não existir
 
     for filename in os.listdir(TEXTS_DIR):
         if filename.endswith(".txt") and not ('perguntas_e_respostas' in filename):
             file_path = os.path.join(TEXTS_DIR, filename)
-            structured_legislations[filename.split('.')[0]] = process_legislation(file_path)
+            structured_legislation = process_legislation(file_path)
+            
+            # Salva o arquivo processado individualmente
+            output_file = os.path.join("app/data/preprocess", f"{filename.split('.')[0]}.json")
+            with open(output_file, "w", encoding="utf-8") as json_file:
+                json.dump(structured_legislation, json_file, indent=4, ensure_ascii=False)
 
-    # Salva os dados estruturados em JSON
-    output_path = "app/data/processed_legislation.json"
-    with open(output_path, "w", encoding="utf-8") as json_file:
-        json.dump(structured_legislations, json_file, indent=4, ensure_ascii=False)
+    print("Processamento concluído! Arquivos salvos em app/data/preprocess")
 
-    print(f"Processamento concluído! Dados salvos em {output_path}")
+if __name__ == "__main__":
+    preprocess_legislation()

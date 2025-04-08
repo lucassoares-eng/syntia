@@ -1,5 +1,6 @@
 import re
 import json
+import os
 from typing import Any, Dict, Union, List, Pattern
 
 # Termos de filtro expandidos
@@ -163,25 +164,27 @@ def process_content(content: Any) -> Any:
 def preprocess_references():
     """Função principal para carregar, processar e salvar os dados"""
     try:
-        # Carrega o arquivo JSON original
-        with open("app/data/processed_legislation.json", "r", encoding="utf-8") as file:
-            legislation_data = json.load(file)
-        
-        # Processa todos os documentos
-        processed_data = {}
-        for doc_id, content in legislation_data.items():
-            try:
-                processed_data[doc_id] = process_content(content)
-            except Exception as e:
-                print(f"Erro ao processar documento {doc_id}: {e}")
-                processed_data[doc_id] = content
-        
-        # Salva o resultado processado
-        output_path = "app/data/processed_legislation_with_references.json"
-        with open(output_path, "w", encoding="utf-8") as file:
-            json.dump(processed_data, file, ensure_ascii=False, indent=4)
-        
-        print(f"Processamento concluído! Dados salvos em {output_path}")
+        input_dir = "app/data/preprocess"
+        output_dir = "app/data/preprocess_references"
+        os.makedirs(output_dir, exist_ok=True)  # Cria a pasta de saída se não existir
+
+        for filename in os.listdir(input_dir):
+            if filename.endswith(".json"):
+                input_path = os.path.join(input_dir, filename)
+                output_path = os.path.join(output_dir, filename)
+
+                # Carrega o arquivo JSON individual
+                with open(input_path, "r", encoding="utf-8") as file:
+                    legislation_data = json.load(file)
+
+                # Processa o conteúdo do arquivo
+                processed_data = process_content(legislation_data)
+
+                # Salva o resultado processado
+                with open(output_path, "w", encoding="utf-8") as file:
+                    json.dump(processed_data, file, ensure_ascii=False, indent=4)
+
+        print(f"Processamento concluído! Arquivos salvos em {output_dir}")
     
     except Exception as e:
         print(f"Erro durante o processamento: {e}")
